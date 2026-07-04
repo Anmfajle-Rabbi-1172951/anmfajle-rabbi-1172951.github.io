@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Loan EMI Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --navy:#132743;
+    --navy-2:#1c3a5e;
+    --paper:#f6f3ec;
+    --paper-2:#efe9db;
+    --gold:#b8912f;
+    --teal:#2f6a63;
+    --ink:#20262f;
+    --ink-soft:#5a6472;
+    --line:#c9c0aa;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Georgia', 'Newsreader', serif;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:40px 20px;
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    max-width:640px;
+    width:100%;
+    padding:36px 40px;
+    box-shadow:0 2px 10px rgba(19,39,67,0.08);
+  }
+  h1{
+    font-size:24px;
+    color:var(--navy);
+    margin:0 0 4px;
+    border-bottom:3px solid var(--gold);
+    padding-bottom:14px;
+  }
+  .subtitle{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin:14px 0 26px;
+  }
+  .field{
+    margin-bottom:20px;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:.03em;
+  }
+  input{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--ink);
+    background:var(--paper);
+  }
+  input:focus{
+    outline:none;
+    border-color:var(--teal);
+  }
+  .results{
+    margin-top:30px;
+    background:var(--paper-2);
+    border-left:4px solid var(--gold);
+    border-radius:4px;
+    padding:20px 22px;
+  }
+  .row{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:14px;
+  }
+  .row:last-child{border-bottom:none;}
+  .row span:first-child{color:var(--ink-soft);}
+  .row span:last-child{font-weight:600;color:var(--navy);}
+  .emi-highlight{
+    margin-top:14px;
+    background:var(--navy);
+    color:var(--paper);
+    border-radius:4px;
+    padding:16px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .emi-highlight span:first-child{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .emi-highlight span:last-child{
+    font-size:22px;
+    font-weight:700;
+    color:var(--gold);
+  }
+  .footer-note{
+    margin-top:22px;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Loan EMI Calculator</h1>
+    <div class="subtitle">Excel PMT Function &middot; Live Calculation</div>
+
+    <div class="field">
+      <label for="loanAmount">Loan Amount ($)</label>
+      <input type="number" id="loanAmount" value="500000" step="1000" min="0">
+    </div>
+    <div class="field">
+      <label for="interestRate">Annual Interest Rate (%)</label>
+      <input type="number" id="interestRate" value="12" step="0.1" min="0">
+    </div>
+    <div class="field">
+      <label for="loanTerm">Loan Term (Years)</label>
+      <input type="number" id="loanTerm" value="30" step="1" min="1">
+    </div>
+    <div class="field">
+      <label for="paymentsPerYear">Payments Per Year</label>
+      <input type="number" id="paymentsPerYear" value="12" step="1" min="1">
+    </div>
+
+    <div class="results">
+      <div class="row"><span>Monthly Interest Rate</span><span id="monthlyRate">-</span></div>
+      <div class="row"><span>Total Number of Payments</span><span id="totalPayments">-</span></div>
+      <div class="emi-highlight">
+        <span>Monthly EMI</span>
+        <span id="monthlyEMI">-</span>
+      </div>
+    </div>
+    <div class="footer-note">Calculation replicates the Excel PMT formula: =PMT(rate, nper, -pv)</div>
+  </div>
+
+<script>
+  function pmt(rate, nper, pv) {
+    if (rate === 0) return -(pv / nper);
+    return -(pv * rate) / (1 - Math.pow(1 + rate, -nper));
+  }
+
+  function formatCurrency(num) {
+    return '$' + num.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  function calculate() {
+    const loanAmount = parseFloat(document.getElementById('loanAmount').value) || 0;
+    const annualRate = (parseFloat(document.getElementById('interestRate').value) || 0) / 100;
+    const loanTerm = parseFloat(document.getElementById('loanTerm').value) || 0;
+    const paymentsPerYear = parseFloat(document.getElementById('paymentsPerYear').value) || 1;
+
+    const monthlyRate = annualRate / paymentsPerYear;
+    const totalPayments = loanTerm * paymentsPerYear;
+    const emi = pmt(monthlyRate, totalPayments, loanAmount);
+
+    document.getElementById('monthlyRate').textContent = (monthlyRate * 100).toFixed(4) + '%';
+    document.getElementById('totalPayments').textContent = totalPayments;
+    document.getElementById('monthlyEMI').textContent = formatCurrency(emi);
+  }
+
+  document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+  calculate();
+</script>
+</body>
+</html>
